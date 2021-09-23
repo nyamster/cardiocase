@@ -1,0 +1,19 @@
+/build
+/Drivers
+
+# editor files
+.vscode/*
+!.vscode/*.md
+!.vscode/*.svd
+!.vscode/launch.json
+!.vscode/tasks.json
+!.vscode/extensions.json
+
+#Ozone
+*.user
+
+#CTags
+**/tags
+
+#Misc
+mfxstm32l152/
