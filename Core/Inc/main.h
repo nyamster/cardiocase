@@ -64,12 +64,27 @@ void Error_Handler(void);
 #define adrdy_n_Pin GPIO_PIN_8
 #define adrdy_n_GPIO_Port GPIOA
 #define adrdy_n_EXTI_IRQn EXTI9_5_IRQn
+#define button_Pin GPIO_PIN_7
+#define button_GPIO_Port GPIOC
+#define button_EXTI_IRQn EXTI9_5_IRQn
+#define bt_reset_Pin GPIO_PIN_9
+#define bt_reset_GPIO_Port GPIOF
 #define power_Pin GPIO_PIN_12
 #define power_GPIO_Port GPIOD
+#define bt_disct_Pin GPIO_PIN_15
+#define bt_disct_GPIO_Port GPIOF
 #define astart_Pin GPIO_PIN_1
 #define astart_GPIO_Port GPIOB
+#define bt_mute_Pin GPIO_PIN_13
+#define bt_mute_GPIO_Port GPIOF
+#define uart_rts_Pin GPIO_PIN_0
+#define uart_rts_GPIO_Port GPIOA
 #define ncs_Pin GPIO_PIN_4
 #define ncs_GPIO_Port GPIOA
+#define uart_cts_Pin GPIO_PIN_1
+#define uart_cts_GPIO_Port GPIOA
+#define bt_status_Pin GPIO_PIN_14
+#define bt_status_GPIO_Port GPIOF
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

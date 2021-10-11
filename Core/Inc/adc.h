@@ -24,6 +24,7 @@ class Ads1292R {
     uint8_t read_reg(uint8_t reg);
     void write_command(uint8_t command);
     void delay_us(int delay);
+    void init();
 };
 
 extern Ads1292R adc;

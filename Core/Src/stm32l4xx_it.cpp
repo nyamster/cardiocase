@@ -60,6 +60,7 @@
 #include "circular_buffer.h"
 
 extern UART_HandleTypeDef huart2;
+extern TIM_HandleTypeDef htim7;
 extern Ads1292R adc;
 extern CircularBuffer<int> adc_buf;
 extern CircularBuffer<uint8_t> uart_buf;
@@ -212,12 +213,22 @@ void EXTI9_5_IRQHandler(void)
   /* USER CODE BEGIN EXTI9_5_IRQn 0 */
 
   /* USER CODE END EXTI9_5_IRQn 0 */
+  //Button
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_7);
+  //Adc
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_8);
   /* USER CODE BEGIN EXTI9_5_IRQn 1 */
 
-  int result = adc.read_data();
-  adc_buf.put(result);
-  watched = result;
+  if (HAL_GPIO_ReadPin(adrdy_n_GPIO_Port, adrdy_n_Pin) == GPIO_PIN_SET)
+  {
+    int result = adc.read_data();
+    adc_buf.put(result);
+    watched = result >> 5;
+  }
+  if (HAL_GPIO_ReadPin(button_GPIO_Port, button_Pin) == GPIO_PIN_RESET)
+  {
+    SEGGER_RTT_printf(0, "Button pressed\n");
+  }
   // SEGGER_RTT_printf(0, "RESULT: %d\n", result);
   /* USER CODE END EXTI9_5_IRQn 1 */
 }
@@ -238,12 +249,26 @@ void USART2_IRQHandler(void)
   {
     SEGGER_RTT_printf(0, "ERROR: %d\n", status);
   }
-  // if (data != 0 && data != '\r' && data != '\n')
-  // {
+  if (data != 0 && data != '\r' && data != '\n')
+  {
     uart_buf.put(data);
-    SEGGER_RTT_printf(0, "Uart data: %c\n", data);
-  // }
+    // SEGGER_RTT_printf(0, "Uart data 1: %c\n", data);
+  }
   /* USER CODE END USART2_IRQn 1 */
+}
+
+/**
+  * @brief This function handles TIM7 global interrupt.
+  */
+void TIM7_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM7_IRQn 0 */
+
+  /* USER CODE END TIM7_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim7);
+  /* USER CODE BEGIN TIM7_IRQn 1 */
+  // SEGGER_RTT_printf(0, "Hello from timer\n");
+  /* USER CODE END TIM7_IRQn 1 */
 }
 
 /* USER CODE BEGIN 1 */

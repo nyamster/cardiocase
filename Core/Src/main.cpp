@@ -27,6 +27,7 @@
 #include "adc.h"
 #include "tim.h"
 #include "utils.h"
+#include "tps.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -60,6 +61,7 @@ void SystemClock_Config(void);
 Ads1292R adc;
 CircularBuffer<int> adc_buf(100);
 CircularBuffer<uint8_t> uart_buf(100);
+Tps65070 tps;
 
 /* USER CODE END PFP */
 
@@ -101,144 +103,71 @@ int main(void)
   MX_USART2_UART_Init();
   MX_SPI1_Init();
   MX_TIM2_Init();
+  MX_TIM7_Init();
 
   HAL_TIM_Base_Start(&htim2);
+  HAL_GPIO_WritePin(bt_reset_GPIO_Port, bt_reset_Pin, GPIO_PIN_RESET);
   // circ_buf = CircularBuffer<int>(100);
   // MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
   //HAL_GPIO_WritePin(power_GPIO_Port, power_Pin, GPIO_PIN_RESET);
   
   // TPS
-  int status;
-  status = HAL_I2C_IsDeviceReady(&hi2c1, 0x48<<1, 10, HAL_MAX_DELAY);
-  if (status != HAL_OK) {
-    SEGGER_RTT_printf(0, "ERROR: %d\n", status);
-  }
+  tps = Tps65070(hi2c1);
+  tps.init();
 
-  uint8_t buf[] = {0x16, 0x47};
-  status = HAL_I2C_Master_Transmit(&hi2c1, 0x48<<1, buf, 2, HAL_MAX_DELAY);
-  if (status != HAL_OK) {
-    SEGGER_RTT_printf(0, "ERROR: %d\n", status);
-  }
-
-  uint8_t buf1[] = {0x10, 0x33}; //0x25 - 1.8V 0x33 - 2.5V
-  status = HAL_I2C_Master_Transmit(&hi2c1, 0x48<<1, buf1, 2, HAL_MAX_DELAY);
-  if (status != HAL_OK) {
-    SEGGER_RTT_printf(0, "ERROR: %d\n", status);
-  }
-
-  uint8_t buf2[1] = {1};
-  status = HAL_I2C_Mem_Read(&hi2c1, 0x48<<1, 0x10, I2C_MEMADD_SIZE_8BIT, buf2, 1, HAL_MAX_DELAY);
-  if (status != HAL_OK) {
-    SEGGER_RTT_printf(0, "ERROR: %d\n", status);
-  }
-
-  SEGGER_RTT_printf(0, "I2c: %x\n", buf2[0]);
+  HAL_GPIO_WritePin(bt_reset_GPIO_Port, bt_reset_Pin, GPIO_PIN_SET);
+  // HAL_Delay(500);
 
   // ADC
   adc = Ads1292R(hspi1, htim2);
-
-  HAL_GPIO_WritePin(ncs_GPIO_Port, ncs_Pin, GPIO_PIN_SET);
-  HAL_Delay(200);
-  HAL_GPIO_WritePin(astart_GPIO_Port, astart_Pin, GPIO_PIN_RESET);
-  HAL_GPIO_WritePin(areset_n_GPIO_Port, areset_n_Pin, GPIO_PIN_RESET);
-  HAL_Delay(200);
-  HAL_GPIO_WritePin(areset_n_GPIO_Port, areset_n_Pin, GPIO_PIN_SET);
-  HAL_Delay(200);
-
-  // Reset ADC
-  adc.write_command(0x06);
-  HAL_Delay(100);
-
-  // Set command mode
-  adc.write_command(0x11);
-  HAL_Delay(100);
-
-  // Read ADC id
-  uint8_t reg = adc.read_reg(0x00);
-  SEGGER_RTT_printf(0, "Adc: %x\n", reg);
-  HAL_Delay(100);
-
-  // Writing into CONFIG 1 register
-  adc.write_reg(0x01, 0x01);
-  HAL_Delay(100);
-
-  reg = adc.read_reg(0x01);
-  SEGGER_RTT_printf(0, "CONFIG 1: %x, expected: 0x01\n", reg);
-
-  // Writing into CONFIG 2 register
-  //1010_0011
-  adc.write_reg(0x02, 0xA3);
-  HAL_Delay(100);
-
-  reg = adc.read_reg(0x02);
-  SEGGER_RTT_printf(0, "CONFIG 2: %x, expected: 0xE3\n", reg);
-
-  // Writing into LOFF register
-  // adc.write_reg(0x03, 0x10);
-  // HAL_Delay(100);
-
-  // reg = adc.read_reg(0x03);
-  // SEGGER_RTT_printf(0, "LOFF: %x, expected: 0x10\n", reg);
-
-  // Writing into CH1SET register
-  //01010101
-  adc.write_reg(0x04, 0x55);
-  HAL_Delay(100);
-
-  // Read register
-  reg = adc.read_reg(0x01);
-  SEGGER_RTT_printf(0, "CH1SET: %x, expected: 0x55\n", reg);
-  HAL_Delay(100);
-
-  // Writing into CH2SET register
-  adc.write_reg(0x05, 0x55);
-  HAL_Delay(100);
-
-  // Read register
-  reg = adc.read_reg(0x05);
-  SEGGER_RTT_printf(0, "CH2SET: %x, expected: 0x55\n", reg);
-  HAL_Delay(100);
-
-  // Set continuous mode
-  adc.write_command(0x10);
-  HAL_Delay(100);
-
-  HAL_GPIO_WritePin(astart_GPIO_Port, astart_Pin, GPIO_PIN_SET);
-  HAL_Delay(100);
-  
-  // Ads1292R adc (hspi1);
-  // adc.init();
+  adc.init();
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
+  // while (1);
   /* USER CODE BEGIN WHILE */
-  uint8_t data;
-  // HAL_UART_Receive_IT(&huart2, uart, 1);
-  // send_command(&huart2, (uint8_t *)"AT+TPMODE=0\r\n", 13, uart_buf);
-  // send_command(&huart2, (uint8_t *)"AT+BAUD=460800\r\n", 16, uart_buf);
-  // send_command(&huart2, (uint8_t *)"AT+LPM=1\r\n", 10, uart_buf);
-  HAL_UART_Transmit(&huart2, (uint8_t *)"AT+LPM=1", 8, HAL_MAX_DELAY);
   
-  // recieve_command((uint8_t *)"+GATTDATA=5,AdcOn", 17, uart_buf);
+  //Timer start
+  // __HAL_TIM_CLEAR_FLAG(&htim7, TIM_SR_UIF);
+  // HAL_TIM_Base_Start_IT(&htim7);
+  // send_command(&huart2, (uint8_t *)"AT\r\n", 4, uart_buf);
+  // while (1);
+  send_command(&huart2, (uint8_t *)"AT+BAUD=57600\r\n", 15, uart_buf);
+  send_command(&huart2, (uint8_t *)"AT+LPM=1\r\n", 10, uart_buf);
+  send_command(&huart2, (uint8_t *)"AT+TPMODE=0\r\n", 13, uart_buf);
+  // HAL_UART_Transmit(&huart2, (uint8_t *)"AT+LPM=1", 8, HAL_MAX_DELAY);
+  
+  recieve_command((uint8_t *)"+GATTDATA=5,AdcOn", 17, uart_buf);
+  // send_command(&huart2, (uint8_t *)"AT+LESEND=3,100\r\n", 19, uart_buf);
+
+  int voltage = tps.voltage_measurment();
+  send_voltage(&huart2, voltage, uart_buf);
+  recieve_command((uint8_t *)"OK", 2, uart_buf);
+
+  int i = 0, buf[40], error_cnt = 0;
   while (1)
   {
-    // status = HAL_UART_Receive(&huart2, &data, 1, HAL_MAX_DELAY);
-    // if (status != HAL_OK)
-    // {
-    //   SEGGER_RTT_printf(0, "ERROR: %d\n", status);
-    // }
-    // if (data != 0) {
-    //   SEGGER_RTT_printf(0, "Uart data: %d\n", data);
-    // }
     /* USER CODE END WHILE */
-    // if (!adc_buf.empty())
-    // {
-    //   int result = adc_buf.get();
-    //   // SEGGER_RTT_printf(0, "RESULT: %d\n", result);
-    // }
     /* USER CODE BEGIN 3 */
+    if (!adc_buf.empty())
+    {
+      int result = adc_buf.get();
+      buf[i] = result;
+      i++;
+      if (i >= 40)
+      {
+        error_cnt += send_data(&huart2, buf, 40, uart_buf);
+        i = 0;
+
+        if (error_cnt > 5)
+        {
+          HAL_GPIO_WritePin(power_GPIO_Port, power_Pin, GPIO_PIN_RESET);
+        }
+      }
+      // SEGGER_RTT_printf(0, "RESULT: %d\n", result);
+    }
   }
   /* USER CODE END 3 */
 }
@@ -262,16 +191,9 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
-  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
-  RCC_OscInitStruct.PLL.PLLM = 2;
-  RCC_OscInitStruct.PLL.PLLN = 16;
-  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
-  RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV2;
-  RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV2;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -280,34 +202,36 @@ void SystemClock_Config(void)
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSE;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_3) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
   {
     Error_Handler();
   }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2|RCC_PERIPHCLK_I2C1
-                              |RCC_PERIPHCLK_ADC;
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2|RCC_PERIPHCLK_I2C1;
   PeriphClkInit.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
   PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_PCLK1;
-  PeriphClkInit.AdcClockSelection = RCC_ADCCLKSOURCE_PLLSAI1;
-  PeriphClkInit.PLLSAI1.PLLSAI1Source = RCC_PLLSOURCE_HSI;
-  PeriphClkInit.PLLSAI1.PLLSAI1M = 2;
-  PeriphClkInit.PLLSAI1.PLLSAI1N = 8;
-  PeriphClkInit.PLLSAI1.PLLSAI1P = RCC_PLLP_DIV2;
-  PeriphClkInit.PLLSAI1.PLLSAI1Q = RCC_PLLQ_DIV2;
-  PeriphClkInit.PLLSAI1.PLLSAI1R = RCC_PLLR_DIV2;
-  PeriphClkInit.PLLSAI1.PLLSAI1ClockOut = RCC_PLLSAI1_ADC1CLK;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
     Error_Handler();
   }
 }
-
 /* USER CODE BEGIN 4 */
+
+// Callback: timer has rolled over
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  // Check which version of the timer triggered this callback and toggle LED
+  if (htim == &htim7)
+  {
+    // SEGGER_RTT_printf(0, "Hello from timer\n");
+    int voltage = tps.voltage_measurment();
+    send_voltage(&huart2, voltage, uart_buf);
+  }
+}
 
 /* USER CODE END 4 */
 
