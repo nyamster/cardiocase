@@ -77,7 +77,6 @@ Tps65070 tps;
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -100,13 +99,13 @@ int main(void)
   SEGGER_RTT_printf(0, "Starting cardiocase\n");
   MX_GPIO_Init();
   MX_I2C1_Init();
-  MX_USART2_UART_Init();
+  // MX_USART2_UART_Init();
   MX_SPI1_Init();
   MX_TIM2_Init();
-  MX_TIM7_Init();
+  // MX_TIM7_Init();
 
   HAL_TIM_Base_Start(&htim2);
-  HAL_GPIO_WritePin(bt_reset_GPIO_Port, bt_reset_Pin, GPIO_PIN_RESET);
+  // HAL_GPIO_WritePin(bt_reset_GPIO_Port, bt_reset_Pin, GPIO_PIN_RESET);
   // circ_buf = CircularBuffer<int>(100);
   // MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
@@ -119,9 +118,13 @@ int main(void)
   HAL_GPIO_WritePin(bt_reset_GPIO_Port, bt_reset_Pin, GPIO_PIN_SET);
   // HAL_Delay(500);
 
+  // HAL_Delay(10000);
   // ADC
   adc = Ads1292R(hspi1, htim2);
   adc.init();
+  HAL_Delay(5000);
+  HAL_GPIO_WritePin(power_GPIO_Port, power_Pin, GPIO_PIN_RESET);
+  // NVIC_SystemReset();
 
   /* USER CODE END 2 */
 

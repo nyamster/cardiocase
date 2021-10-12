@@ -211,10 +211,11 @@ int watched;
 void EXTI9_5_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI9_5_IRQn 0 */
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_SET);
 
   /* USER CODE END EXTI9_5_IRQn 0 */
   //Button
-  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_7);
+  // HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_7);
   //Adc
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_8);
   /* USER CODE BEGIN EXTI9_5_IRQn 1 */
@@ -225,10 +226,10 @@ void EXTI9_5_IRQHandler(void)
     adc_buf.put(result);
     watched = result >> 5;
   }
-  if (HAL_GPIO_ReadPin(button_GPIO_Port, button_Pin) == GPIO_PIN_RESET)
-  {
-    SEGGER_RTT_printf(0, "Button pressed\n");
-  }
+  // if (HAL_GPIO_ReadPin(button_GPIO_Port, button_Pin) == GPIO_PIN_RESET)
+  // {
+  //   SEGGER_RTT_printf(0, "Button pressed\n");
+  // }
   // SEGGER_RTT_printf(0, "RESULT: %d\n", result);
   /* USER CODE END EXTI9_5_IRQn 1 */
 }

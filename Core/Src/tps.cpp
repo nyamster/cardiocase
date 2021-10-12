@@ -15,7 +15,7 @@ void Tps65070::init()
     SEGGER_RTT_printf(0, "ERROR: %d\n", status);
   }
 
-  constexpr uint8_t tmp1[] = {0x10, 0x33}; //0x25 - 1.8V 0x33 - 2.5V
+  constexpr uint8_t tmp1[] = {0x10, 0x3F}; //0x25 - 1.8V 0x33 - 2.5V
   status = HAL_I2C_Master_Transmit(&i2c, 0x48<<1, const_cast<uint8_t *>(tmp1), 2, HAL_MAX_DELAY);
   if (status != HAL_OK) {
     SEGGER_RTT_printf(0, "ERROR: %d\n", status);

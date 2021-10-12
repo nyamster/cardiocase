@@ -64,9 +64,6 @@ void Error_Handler(void);
 #define adrdy_n_Pin GPIO_PIN_8
 #define adrdy_n_GPIO_Port GPIOA
 #define adrdy_n_EXTI_IRQn EXTI9_5_IRQn
-#define button_Pin GPIO_PIN_7
-#define button_GPIO_Port GPIOC
-#define button_EXTI_IRQn EXTI9_5_IRQn
 #define bt_reset_Pin GPIO_PIN_9
 #define bt_reset_GPIO_Port GPIOF
 #define power_Pin GPIO_PIN_12

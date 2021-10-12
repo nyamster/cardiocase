@@ -1,4 +1,7 @@
 #include "adc.h"
+#include "usart.h"
+#include "utils.h"
+#include "circular_buffer.h"
 
 void Ads1292R::delay_us(int delay)
 {
@@ -114,16 +117,16 @@ int Ads1292R::read_data()
 void Ads1292R::init()
 {
   HAL_GPIO_WritePin(ncs_GPIO_Port, ncs_Pin, GPIO_PIN_SET);
-  HAL_Delay(200);
+  // HAL_Delay(200);
   HAL_GPIO_WritePin(astart_GPIO_Port, astart_Pin, GPIO_PIN_RESET);
   HAL_GPIO_WritePin(areset_n_GPIO_Port, areset_n_Pin, GPIO_PIN_RESET);
-  HAL_Delay(200);
+  // HAL_Delay(1000);
   HAL_GPIO_WritePin(areset_n_GPIO_Port, areset_n_Pin, GPIO_PIN_SET);
-  HAL_Delay(200);
+  // HAL_Delay(200);
 
   // Reset ADC
-  write_command(0x06);
-  HAL_Delay(200);
+  // write_command(0x06);
+  // HAL_Delay(200);
 
   // Set command mode
   write_command(0x11);
@@ -134,13 +137,6 @@ void Ads1292R::init()
   SEGGER_RTT_printf(0, "Adc: %x\n", reg);
   HAL_Delay(100);
 
-  // Writing into CONFIG 1 register
-  write_reg(0x01, 0x01);
-  HAL_Delay(100);
-
-  reg = read_reg(0x01);
-  SEGGER_RTT_printf(0, "CONFIG 1: %x, expected: 0x01\n", reg);
-
   // Writing into CONFIG 2 register
   //1010_0011
   write_reg(0x02, 0xA3);
@@ -148,6 +144,22 @@ void Ads1292R::init()
 
   reg = read_reg(0x02);
   SEGGER_RTT_printf(0, "CONFIG 2: %x, expected: 0xA3\n", reg);
+  // if (reg != 0xA3)
+  // {
+  //   send_command(&huart2, (uint8_t *)"AT+LESEND=2,NO\r\n", 16, uart_buf);
+  // }
+  // else
+  // {
+  //   send_command(&huart2, (uint8_t *)"AT+LESEND=3,YES\r\n", 17, uart_buf);
+  // }
+
+  // Writing into CONFIG 1 register
+  write_reg(0x01, 0x01);
+  HAL_Delay(100);
+
+  reg = read_reg(0x01);
+  SEGGER_RTT_printf(0, "CONFIG 1: %x, expected: 0x01\n", reg);
+
 
   // Writing into LOFF register
   // write_reg(0x03, 0x10);
@@ -185,9 +197,9 @@ void Ads1292R::init()
   // HAL_Delay(100);
 
   // Set continuous mode
-  write_command(0x10);
-  HAL_Delay(100);
+  // write_command(0x10);
+  // HAL_Delay(100);
 
-  HAL_GPIO_WritePin(astart_GPIO_Port, astart_Pin, GPIO_PIN_SET);
-  HAL_Delay(100);
+  // HAL_GPIO_WritePin(astart_GPIO_Port, astart_Pin, GPIO_PIN_SET);
+  // HAL_Delay(100);
 }
