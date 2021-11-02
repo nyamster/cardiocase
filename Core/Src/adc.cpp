@@ -17,7 +17,7 @@ void Ads1292R::write_reg(uint8_t reg, uint8_t value)
     uint8_t buf[] = {cmd, 0, value};
     int status;
 
-    HAL_GPIO_WritePin(ncs_GPIO_Port, ncs_Pin, GPIO_PIN_RESET);
+    // HAL_GPIO_WritePin(ncs_GPIO_Port, ncs_Pin, GPIO_PIN_RESET);
     delay_us(20);
     status = HAL_SPI_Transmit(&spi, &buf[0], 1, HAL_MAX_DELAY);
     delay_us(10);
@@ -28,7 +28,7 @@ void Ads1292R::write_reg(uint8_t reg, uint8_t value)
     if (status != HAL_OK) {
         SEGGER_RTT_printf(0, "ERROR: %d\n", status);
     }
-    HAL_GPIO_WritePin(ncs_GPIO_Port, ncs_Pin, GPIO_PIN_SET);
+    // HAL_GPIO_WritePin(ncs_GPIO_Port, ncs_Pin, GPIO_PIN_SET);
 }
 
 uint8_t Ads1292R::read_reg(uint8_t reg)
@@ -38,7 +38,7 @@ uint8_t Ads1292R::read_reg(uint8_t reg)
   uint8_t buf_rec[] = {0, 0, 0};
   int status;
 
-  HAL_GPIO_WritePin(ncs_GPIO_Port, ncs_Pin, GPIO_PIN_RESET);
+  // HAL_GPIO_WritePin(ncs_GPIO_Port, ncs_Pin, GPIO_PIN_RESET);
   delay_us(20);
   status = HAL_SPI_TransmitReceive(&spi, &buf_trans[0], &buf_rec[0], 1, HAL_MAX_DELAY);
   delay_us(10);
@@ -49,7 +49,7 @@ uint8_t Ads1292R::read_reg(uint8_t reg)
   if (status != HAL_OK) {
     SEGGER_RTT_printf(0, "ERROR: %d\n", status);
   }
-  HAL_GPIO_WritePin(ncs_GPIO_Port, ncs_Pin, GPIO_PIN_SET);
+  // HAL_GPIO_WritePin(ncs_GPIO_Port, ncs_Pin, GPIO_PIN_SET);
   return buf_rec[2];
 }
 
@@ -57,14 +57,14 @@ void Ads1292R::write_command(uint8_t command)
 {
     int status;
 
-    HAL_GPIO_WritePin(ncs_GPIO_Port, ncs_Pin, GPIO_PIN_RESET);
+    // HAL_GPIO_WritePin(ncs_GPIO_Port, ncs_Pin, GPIO_PIN_RESET);
     delay_us(20);
     status = HAL_SPI_Transmit(&spi, &command, 1, HAL_MAX_DELAY);
     if (status != HAL_OK) {
         SEGGER_RTT_printf(0, "ERROR: %d\n", status);
     }
     delay_us(20);
-    HAL_GPIO_WritePin(ncs_GPIO_Port, ncs_Pin, GPIO_PIN_SET);
+    // HAL_GPIO_WritePin(ncs_GPIO_Port, ncs_Pin, GPIO_PIN_SET);
 }
 
 int Ads1292R::read_data()
@@ -73,7 +73,7 @@ int Ads1292R::read_data()
     uint8_t buf[] = {0x0};
     uint8_t data_buf[4] = {0, 0, 0, 0};
     uint8_t status_buf[4] = {0, 0, 0, 0};
-    HAL_GPIO_WritePin(ncs_GPIO_Port, ncs_Pin, GPIO_PIN_RESET);
+    // HAL_GPIO_WritePin(ncs_GPIO_Port, ncs_Pin, GPIO_PIN_RESET);
     this->delay_us(10);
 
     // Read status word
@@ -108,21 +108,22 @@ int Ads1292R::read_data()
 
     int result = (data_buf[0] << 8*2) | (data_buf[1] << 8*1) | (data_buf[2] << 8*0);
     this->delay_us(10);
-    HAL_GPIO_WritePin(ncs_GPIO_Port, ncs_Pin, GPIO_PIN_SET);
+    // HAL_GPIO_WritePin(ncs_GPIO_Port, ncs_Pin, GPIO_PIN_SET);
     this->delay_us(10);
 
     return result;
 }
 
-void Ads1292R::init()
+bool Ads1292R::init()
 {
-  HAL_GPIO_WritePin(ncs_GPIO_Port, ncs_Pin, GPIO_PIN_SET);
+  // HAL_GPIO_WritePin(ncs_GPIO_Port, ncs_Pin | GPIO_PIN_7, GPIO_PIN_SET);
+  // HAL_GPIO_WritePin(ncs_GPIO_Port, GPIO_PIN_7, GPIO_PIN_RESET);
   // HAL_Delay(200);
   HAL_GPIO_WritePin(astart_GPIO_Port, astart_Pin, GPIO_PIN_RESET);
   HAL_GPIO_WritePin(areset_n_GPIO_Port, areset_n_Pin, GPIO_PIN_RESET);
-  // HAL_Delay(1000);
+  HAL_Delay(100);
   HAL_GPIO_WritePin(areset_n_GPIO_Port, areset_n_Pin, GPIO_PIN_SET);
-  // HAL_Delay(200);
+  HAL_Delay(100);
 
   // Reset ADC
   // write_command(0x06);
@@ -143,11 +144,13 @@ void Ads1292R::init()
   HAL_Delay(100);
 
   reg = read_reg(0x02);
-  SEGGER_RTT_printf(0, "CONFIG 2: %x, expected: 0xA3\n", reg);
-  // if (reg != 0xA3)
-  // {
-  //   send_command(&huart2, (uint8_t *)"AT+LESEND=2,NO\r\n", 16, uart_buf);
-  // }
+  
+  if (reg != 0xA3)
+  {
+    SEGGER_RTT_printf(0, "CONFIG 2: %x, expected: 0xA3\n", reg);
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_RESET);
+    return 0;
+  }
   // else
   // {
   //   send_command(&huart2, (uint8_t *)"AT+LESEND=3,YES\r\n", 17, uart_buf);
@@ -158,7 +161,13 @@ void Ads1292R::init()
   HAL_Delay(100);
 
   reg = read_reg(0x01);
-  SEGGER_RTT_printf(0, "CONFIG 1: %x, expected: 0x01\n", reg);
+  
+  if (reg != 0x01)
+  {
+    SEGGER_RTT_printf(0, "CONFIG 1: %x, expected: 0x01\n", reg);
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_RESET);
+    return 0;
+  }
 
 
   // Writing into LOFF register
@@ -175,8 +184,14 @@ void Ads1292R::init()
 
   // Read register
   reg = read_reg(0x04);
-  SEGGER_RTT_printf(0, "CH1SET: %x, expected: 0x55\n", reg);
+  
   HAL_Delay(100);
+  if (reg != 0x55)
+  {
+    SEGGER_RTT_printf(0, "CH1SET: %x, expected: 0x55\n", reg);
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_RESET);
+    return 0;
+  }
 
   // Writing into CH2SET register
   write_reg(0x05, 0x55);
@@ -184,8 +199,14 @@ void Ads1292R::init()
 
   // Read register
   reg = read_reg(0x05);
-  SEGGER_RTT_printf(0, "CH2SET: %x, expected: 0x55\n", reg);
+  
   HAL_Delay(100);
+  if (reg != 0x55)
+  {
+    SEGGER_RTT_printf(0, "CH2SET: %x, expected: 0x55\n", reg);
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_RESET);
+    return 0;
+  }
 
   // // Writing into LOFF_SENS register
   // write_reg(0x07, 0x3C);
@@ -197,9 +218,10 @@ void Ads1292R::init()
   // HAL_Delay(100);
 
   // Set continuous mode
-  // write_command(0x10);
-  // HAL_Delay(100);
+  write_command(0x10);
+  HAL_Delay(100);
 
-  // HAL_GPIO_WritePin(astart_GPIO_Port, astart_Pin, GPIO_PIN_SET);
-  // HAL_Delay(100);
+  HAL_GPIO_WritePin(astart_GPIO_Port, astart_Pin, GPIO_PIN_SET);
+  HAL_Delay(100);
+  return 1;
 }

@@ -99,31 +99,41 @@ int main(void)
   SEGGER_RTT_printf(0, "Starting cardiocase\n");
   MX_GPIO_Init();
   MX_I2C1_Init();
-  // MX_USART2_UART_Init();
-  MX_SPI1_Init();
+  MX_USART2_UART_Init();
   MX_TIM2_Init();
-  // MX_TIM7_Init();
+  MX_TIM7_Init();
 
   HAL_TIM_Base_Start(&htim2);
-  // HAL_GPIO_WritePin(bt_reset_GPIO_Port, bt_reset_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(bt_reset_GPIO_Port, bt_reset_Pin, GPIO_PIN_RESET);
   // circ_buf = CircularBuffer<int>(100);
   // MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
-  //HAL_GPIO_WritePin(power_GPIO_Port, power_Pin, GPIO_PIN_RESET);
+  // HAL_GPIO_WritePin(power_GPIO_Port, power_Pin, GPIO_PIN_RESET);
   
   // TPS
   tps = Tps65070(hi2c1);
   tps.init();
+  MX_SPI1_Init();
 
+  // HAL_SPI_MspDeInit(&hspi1);
+  // HAL_SPI_MspInit(&hspi1);
   HAL_GPIO_WritePin(bt_reset_GPIO_Port, bt_reset_Pin, GPIO_PIN_SET);
   // HAL_Delay(500);
 
   // HAL_Delay(10000);
   // ADC
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_SET);
   adc = Ads1292R(hspi1, htim2);
-  adc.init();
-  HAL_Delay(5000);
-  HAL_GPIO_WritePin(power_GPIO_Port, power_Pin, GPIO_PIN_RESET);
+  if (!adc.init())
+  {
+    // SEGGER_RTT_printf(0, "Reseting spi and adc\n");
+    // // NVIC_SystemReset();
+    // HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_SET);
+    // adc.init();
+  }
+  // HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_SET);
+  // HAL_Delay(2000);
+  // HAL_GPIO_WritePin(power_GPIO_Port, power_Pin, GPIO_PIN_RESET);
   // NVIC_SystemReset();
 
   /* USER CODE END 2 */

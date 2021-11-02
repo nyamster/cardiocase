@@ -11,6 +11,7 @@ class Ads1292R {
     private:
     SPI_HandleTypeDef spi;
     TIM_HandleTypeDef timer;
+    int tmp = 0;
 
     public:
     Ads1292R(SPI_HandleTypeDef _spi, TIM_HandleTypeDef _timer) : spi(_spi), timer(_timer) {
@@ -24,7 +25,7 @@ class Ads1292R {
     uint8_t read_reg(uint8_t reg);
     void write_command(uint8_t command);
     void delay_us(int delay);
-    void init();
+    bool init();
 };
 
 extern Ads1292R adc;
