@@ -105,55 +105,33 @@ int main(void)
 
   HAL_TIM_Base_Start(&htim2);
   HAL_GPIO_WritePin(bt_reset_GPIO_Port, bt_reset_Pin, GPIO_PIN_RESET);
-  // circ_buf = CircularBuffer<int>(100);
-  // MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
-  // HAL_GPIO_WritePin(power_GPIO_Port, power_Pin, GPIO_PIN_RESET);
   
   // TPS
   tps = Tps65070(hi2c1);
   tps.init();
   MX_SPI1_Init();
 
-  // HAL_SPI_MspDeInit(&hspi1);
-  // HAL_SPI_MspInit(&hspi1);
   HAL_GPIO_WritePin(bt_reset_GPIO_Port, bt_reset_Pin, GPIO_PIN_SET);
-  // HAL_Delay(500);
 
-  // HAL_Delay(10000);
   // ADC
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_SET);
   adc = Ads1292R(hspi1, htim2);
   if (!adc.init())
   {
-    // SEGGER_RTT_printf(0, "Reseting spi and adc\n");
-    // // NVIC_SystemReset();
-    // HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_SET);
-    // adc.init();
+    HAL_GPIO_WritePin(power_GPIO_Port, power_Pin, GPIO_PIN_RESET);
   }
-  // HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_SET);
-  // HAL_Delay(2000);
-  // HAL_GPIO_WritePin(power_GPIO_Port, power_Pin, GPIO_PIN_RESET);
-  // NVIC_SystemReset();
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   // while (1);
   /* USER CODE BEGIN WHILE */
-  
-  //Timer start
-  // __HAL_TIM_CLEAR_FLAG(&htim7, TIM_SR_UIF);
-  // HAL_TIM_Base_Start_IT(&htim7);
-  // send_command(&huart2, (uint8_t *)"AT\r\n", 4, uart_buf);
-  // while (1);
-  send_command(&huart2, (uint8_t *)"AT+BAUD=57600\r\n", 15, uart_buf);
+  send_command(&huart2, (uint8_t *)"AT+BAUD=115200\r\n", 15, uart_buf);
   send_command(&huart2, (uint8_t *)"AT+LPM=1\r\n", 10, uart_buf);
   send_command(&huart2, (uint8_t *)"AT+TPMODE=0\r\n", 13, uart_buf);
-  // HAL_UART_Transmit(&huart2, (uint8_t *)"AT+LPM=1", 8, HAL_MAX_DELAY);
   
   recieve_command((uint8_t *)"+GATTDATA=5,AdcOn", 17, uart_buf);
-  // send_command(&huart2, (uint8_t *)"AT+LESEND=3,100\r\n", 19, uart_buf);
 
   int voltage = tps.voltage_measurment();
   send_voltage(&huart2, voltage, uart_buf);

@@ -91,7 +91,7 @@ int send_data(UART_HandleTypeDef *huart, int *buf, int len, CircularBuffer<uint8
         // uint8_t bytes[4];
         buf[i] >>= 5;
         // SEGGER_RTT_printf(0, "RESULT: %d\n", buf[i]);
-        // bytes[0] = (buf[i] >> 24) & 0xFF;
+        // bytes[0] = (buf[i] >> 24) & 0    xFF;
         num[count] = (buf[i] >> 16) & 0xFF;
         pointer += sprintf(pointer, "%02x", num[count]);
         count += 1;
@@ -101,7 +101,6 @@ int send_data(UART_HandleTypeDef *huart, int *buf, int len, CircularBuffer<uint8
         num[count] = buf[i] & 0xFF;
         pointer += sprintf(pointer, "%02x", num[count]);
         count += 1;
-
     }
     pointer += sprintf(pointer, "\r\n");
     // sprintf(data, "%d", num);
